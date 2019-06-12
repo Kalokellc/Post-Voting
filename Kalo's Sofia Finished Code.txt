@@ -1,0 +1,42 @@
+contract VotePosts =
+
+  record post =
+    {creatorAddress  : address,
+    url              : string,
+    name             : string,
+    voteCount        : int,
+    commentCount     : int}
+
+  record state = 
+    {posts        : map(int, post),
+     postLength   : int}
+  
+  function init() = 
+    {posts = {}, 
+     postLength = 0}
+  
+  public function getPost(index : int) : post = 
+    state.posts[index]
+  
+  public stateful function registerPost(url' : string, name' : string) =
+    let post = {creatorAddress = Call.caller, url = url', name = name', voteCount = 0, commentCount = 0}
+    let index = getPostLength() +1
+    put(state {posts[index] = post, postLength = index})
+    
+  public function getPostLength() = 
+    state.postLength
+    
+  public stateful function votePost(index : int) =
+    let post = getPost(index)
+    Chain.spend(post.creatorAddress, Call.value)
+    let updatedVoteCount = post.voteCount + Call.value
+    let updatedPosts = state.posts{ [index].voteCount = updatedVoteCount}
+    put(state{ posts = updatedPosts})
+    
+  public stateful function commentVote(index : int) =
+    let post = getPost(index)
+    Chain.spend(post.creatorAddress, Call.value)
+    let updatedCommentCount = post.commentCount + Call.value
+    let updatedPosts = state.posts{ [index].commentCount = updatedCommentCount}
+    put(state{ posts = updatedPosts})
+    

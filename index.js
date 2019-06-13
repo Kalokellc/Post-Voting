@@ -1,4 +1,4 @@
-const contractAddress ='ct_WxmRh2gA61pw7NntWfV5h1pAkvbFmdV3Af6tZBEFEHopKXvab';
+const contractAddress ='ct_2qcqwwXmfLmZ3a18yvnv4p8ta9HGoyHRjCDvPMvyAqkuMRwzPD';
 var client = null;
 var postArray = [];
 var postsLength = 0;
@@ -11,21 +11,49 @@ var postsLength = 0;
   $('#postBody').html(rendered);
 }
 
+//Kaya-Mailo//
+async function callStatic(func, args, types) {
+  const calledGet = await client.contractCallStatic(contractAddress,
+  'sophia-address', func, {args}).catch(e => console.error(e));
+
+  const decodedGet = await client.contractDecodeData(types,
+  calledGet.result.returnValue).catch(e => console.error(e));
+
+  return decodedGet;
+}
+
+async function contractCall(func, args, value, types) {
+  const calledSet = await client.contractCall(contractAddress, 'sophia-address',
+  contractAddress, func, {args, options: {amount:value}}).catch(async e => {
+    const decodedError = await client.contractDecodeData(types,
+    e.returnValue).catch(e => console.error(e));
+  });
+
+  return
+}
 //PageLoading...//
 window.addEventListener('load', async () => {
 	$("#loader").show();
 	
+	//Mailo//
 	client = await Ae.Aepp();
 	
-	
-    const contract = await client.getContractInstance(contractSource, {contractAddress});
-    const calledGet = await contract.call('getPostLength', [], {callStatic: true}).catch(e => console.error(e));
-    console.log('calledGet', calledGet);
+	const getPostLength = await callStatic('getPostLength','()','int');
+    postLength = getPostLength.value;
 
-    const decodedGet = await calledGet.decode().catch(e => console.error(e));
-    console.log('decodedGet', decodedGet)
+    for (let i = 1; i <= postLength; i++) {
+		const post = await callStatic('getPost',`(${i})`,'(address, string, string, int,int)');
+
+		postArray.push({
+			creatorName: post.value[2].value,
+			postUrl: post.value[1].value,
+			index: i,
+			votes: mpost.value[3].value,
+		})
+	}		
+		
 	renderPosts();
-	
+		
 	$("#loader").hide();
 });
 
@@ -39,7 +67,9 @@ jQuery("#postBody").on("click", ".voteBtn", async function(event){
 });
 
 //Registering Here//
-$('#registerBtn').click(async function(){
+$('#registerBtn').click(async function(){ 
+  $("#loader").show(); 
+  
   var name = ($('#regName').val()),
       url = ($('#regUrl').val());
 
@@ -50,4 +80,5 @@ $('#registerBtn').click(async function(){
     votes: 0
   })
   renderPosts();
+  $("#loader").hide();
 });

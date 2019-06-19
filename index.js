@@ -12,45 +12,43 @@ var postsLength = 0;
 }
 
 //Kaya-Mailo//
-async function callStatic(func, args, types) {
-  const calledGet = await client.contractCallStatic(contractAddress,
-  'sophia-address', func, {args}).catch(e => console.error(e));
 
-  const decodedGet = await client.contractDecodeData(types,
-  calledGet.result.returnValue).catch(e => console.error(e));
+async function callStatic(func, args) {
+  const contract = await client.getContractInstance(contractSource, {contractAddress});
+  const calledGet = await contract.call(func, args, {callStatic: true}).catch(e => console.error(e));
+  const decodedGet = await calledGet.decode().catch(e => console.error(e));
 
   return decodedGet;
 }
 
-async function contractCall(func, args, value, types) {
-  const calledSet = await client.contractCall(contractAddress, 'sophia-address',
-  contractAddress, func, {args, options: {amount:value}}).catch(async e => {
-    const decodedError = await client.contractDecodeData(types,
-    e.returnValue).catch(e => console.error(e));
-  });
+async function contractCall(func, args, value) {
+  const contract = await client.getContractInstance(contractSource, {contractAddress});
+  const calledSet = await contract.call(func, args, {amount: value}).catch(e => console.error(e));
 
-  return
+  return calledSet;
 }
+
 //PageLoading...//
 window.addEventListener('load', async () => {
 	$("#loader").show();
 	
 	//Mailo//
-	client = await Ae.Aepp();
-	
-	const getPostLength = await callStatic('getPostLength','()','int');
-    postLength = getPostLength.value;
 
-    for (let i = 1; i <= postLength; i++) {
-		const post = await callStatic('getPost',`(${i})`,'(address, string, string, int,int)');
+	  client = await Ae.Aepp();
 
-		postArray.push({
-			creatorName: post.value[2].value,
-			postUrl: post.value[1].value,
-			index: i,
-			votes: mpost.value[3].value,
-		})
-	}		
+  postLength = await callStatic('getPostLength', []);
+
+  for (let i = 1; i <= postLength; i++) {
+
+    const post = await callStatic('getPost', [i]);
+
+    postArray.push({
+      creatorName: post.name,
+      postUrl: post.url,
+      index: i,
+      votes: post.voteCount,
+    })
+  }
 		
 	renderPosts();
 		

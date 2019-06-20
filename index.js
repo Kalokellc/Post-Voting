@@ -13,10 +13,12 @@ var postsLength = 0;
 
 //Kaya-Mailo//
 
-async function callStatic(func, args) {
-  const contract = await client.getContractInstance(contractSource, {contractAddress});
-  const calledGet = await contract.call(func, args, {callStatic: true}).catch(e => console.error(e));
-  const decodedGet = await calledGet.decode().catch(e => console.error(e));
+async function callStatic(func, args, types) {
+  const calledGet = await client.contractCallStatic(contractAddress, 
+  'sophia-address', func, {args}).catch(e => console.error(e));
+
+  const decodedGet = await client.contractDecodeData(types, 
+  calledGet.result.returnValue).catch(e => console.error(e));
 
   return decodedGet;
 }
@@ -30,35 +32,38 @@ async function contractCall(func, args, value) {
 
 //PageLoading...//
 window.addEventListener('load', async () => {
+	
 	$("#loader").show();
 	
-	//Mailo//
+	client = await Ae.Aepp();
 
-	  client = await Ae.Aepp();
+	const getPostLength = await callStatic('getPostLength','()','int');
 
-  postLength = await callStatic('getPostLength', []);
+	for (let i = 1; i <= postLength; i++) {
+		const post = await callStatic('getPost','(${i})','(address, string, string, int)');
 
-  for (let i = 1; i <= postLength; i++) {
-
-    const post = await callStatic('getPost', [i]);
-
-    postArray.push({
-      creatorName: post.name,
-      postUrl: post.url,
-      index: i,
-      votes: post.voteCount,
+		postLength = getPostLength.value;
+		
+		postArray.push({ 
+			creatorName: post.value[2].value,
+			postUrl: post.value[1].value,
+			index: i, 
+			votes: post.value[3].value,
     })
   }
-		
-	renderPosts();
-		
-	$("#loader").hide();
+  
+  renderPosts();
+  
+  $("#loader").hide();
 });
 
  //Voting Here//
 jQuery("#postBody").on("click", ".voteBtn", async function(event){
   const value = $(this).siblings('input').val();
   const dataIndex = event.target.id;
+  
+  await contractCall('votePost','(${dataIndex})',value,'(int)');
+  
   const foundIndex = postArray.findIndex(post => post.index == dataIndex);
   postArray[foundIndex].votes += parseInt(value, 10);
   renderPosts();

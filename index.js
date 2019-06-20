@@ -1,4 +1,4 @@
-const contractAddress ='ct_2Xz14hdYpV8uJAgPFu6BPnFJ75LmxFkhvmqTPVBVNnvVfDChzY';
+const contractAddress ='ct_2qcqwwXmfLmZ3a18yvnv4p8ta9HGoyHRjCDvPMvyAqkuMRwzPD';
 var client = null;
 var postArray = [];
 var postLength = 0;
@@ -19,12 +19,14 @@ window.addEventListener('load', async () => {
 
   client = await Ae.Aepp();
   
-  const contract = await client.getContractInstance(contractSource, {contractAddress});
-  const calledGet = await contract.call('getPostLength', [], {callStatic: true}).catch(e => console.error(e));
+  const calledGet = await client.contractCallStatic(contractAddress,
+  'sophia-address', 'getPostLength', (args '{}')).catch(e => console.error(e));
   console.log('calledGet', calledGet);
-
-  const decodedGet = await calledGet.decode().catch(e => console.error(e));
+  
+  const decodedGet = await client.contractDecodeData('int',
+  calledGet.result.returnValue).catch(e => console.error(e));
   console.log('decodedGet', decodedGet);
+
 
   renderPosts();
   

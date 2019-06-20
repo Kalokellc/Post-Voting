@@ -20,7 +20,7 @@ window.addEventListener('load', async () => {
   client = await Ae.Aepp();
   
   const contract = await client.getContractInstance(contractSource, {contractAddress});
-  const calledGet = await contract.call('getpostLength', [], {callStatic: true}).catch(e => console.error(e));
+  const calledGet = await contract.call('getPostLength', [], {callStatic: true}).catch(e => console.error(e));
   console.log('calledGet', calledGet);
 
   const decodedGet = await calledGet.decode().catch(e => console.error(e));

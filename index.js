@@ -25,7 +25,7 @@ var postLength = 0;
   
 //EXECUTE FUNCTIONS//
 	window.addEventListener('load', async () => {
-	  
+	
 	  $("#loader").show();
 
 	  client = await Ae.Aepp();
@@ -34,7 +34,7 @@ var postLength = 0;
 	  postLength = getPostLength.value;
 
 	  for (let i = 1; i <= postLength; i++) {
-		const post = await callStatic('getPost',`(${i})`,'(address, string, string, int)');
+		const post = await callStatic('getPost','(${i})','(address, string, string, int)');
 
 		postArray.push({
 		  creatorName: post.value[2].value,

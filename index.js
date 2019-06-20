@@ -12,6 +12,17 @@ var postLength = 0;
 	  $('#postBody').html(rendered);
 }
 
+//WRITE TO BLOCKCHAIN//
+async function contractCall(func, args, value, types) {
+  const calledSet = await client.contractCall(contractAddress, 'sophia-address',
+  contractAddress, func, {args, options: {amount:value}}).catch(async e => {
+    const decodedError = await client.contractDecodeData(types,
+    e.returnValue).catch(e => console.error(e));
+  });
+
+  return
+}
+
 //READ FROM BLOCKCHAIN//
 	async function callStatic(func, args, types) {
 	  const calledGet = await client.contractCallStatic(contractAddress,
@@ -49,20 +60,32 @@ var postLength = 0;
 	  $("#loader").hide();
 });
 
- //VOTE HERE//
+ //VOTE HERE//		  
 	jQuery("#postBody").on("click", ".voteBtn", async function(event){
+		
+	  $("#loader").show();
+	  
 	  const value = $(this).siblings('input').val();
 	  const dataIndex = event.target.id;
+	  
+	  await contractCall('votepost',`(${dataIndex})`,value,'(int)');
+
 	  const foundIndex = postArray.findIndex(post => post.index == dataIndex);
 	  postArray[foundIndex].votes += parseInt(value, 10);
 	  renderPosts();
+	  
+	  $("#loader").hide();
 });
 
 //REGISTER HERE//
 	$('#registerBtn').click(async function(){ 
 	  
-	  var name = ($('#regName').val()),
-		  url = ($('#regUrl').val());
+	  $("#loader").show();
+	  
+	  const name = ($('#regName').val()),
+		  url = ($('#regUrl').val());'
+		  
+	  await contractCall('registerPost',`("${url}","${name}")`,0,'(int)');
 
 	  postArray.push({
 		creatorName: name,
